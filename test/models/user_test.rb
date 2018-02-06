@@ -2,7 +2,7 @@ require 'test_helper'
 
 class UserTest < ActiveSupport::TestCase
   def setup
-    @user = User.new(email: "user@example.com", password_digest: "fakep@ssword")
+    @user = User.new(email: "user@example.com", password: "fakep@ssword", password_confirmation: "fakep@ssword")
   end
 
   test "should be valid" do
@@ -30,9 +30,21 @@ class UserTest < ActiveSupport::TestCase
     assert_not duplicate_user.valid?
   end
 
-  test "email address uniqueness regardless of case" do
-    dup_user = User.new(email: @user.email.upcase, password_digest: "fakep@ssword")
-    assert !dup_user.save
+  test "email addresses should be saved as lower-case" do
+    mixed_case_email = "Foo@ExAMPle.CoM"
+    @user.email = mixed_case_email
+    @user.save
+    assert_equal mixed_case_email.downcase, @user.reload.email
+  end
+
+  test "password should be present (nonblank)" do
+    @user.password = @user.password_confirmation = " " * 6
+    assert_not @user.valid?
+  end
+
+  test "password should have a minimum length" do
+    @user.password = @user.password_confirmation = "a" * 5
+    assert_not @user.valid?
   end
 
 end
